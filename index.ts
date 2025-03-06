@@ -5,14 +5,24 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import chalk from 'chalk';
 
-class GameThinkingServer {
-  constructor() {
-    this.thoughtHistory = [];
-    this.branches = {};
-  }
+interface GameThoughtData {
+  thought: string;
+  thoughtNumber: number;
+  totalThoughts: number;
+  isRevision?: boolean;
+  revisesThought?: number;
+  branchFromThought?: number;
+  branchId?: string;
+  needsMoreThoughts?: boolean;
+  nextThoughtNeeded: boolean;
+}
 
-  validateGameThoughtData(input) {
-    const data = input;
+class GameThinkingServer {
+  private thoughtHistory: GameThoughtData[] = [];
+  private branches: Record<string, GameThoughtData[]> = {};
+
+  private validateGameThoughtData(input: unknown): GameThoughtData {
+    const data = input as Record<string, unknown>;
 
     if (!data.thought || typeof data.thought !== 'string') {
       throw new Error('Invalid thought: must be a string');
@@ -32,15 +42,15 @@ class GameThinkingServer {
       thoughtNumber: data.thoughtNumber,
       totalThoughts: data.totalThoughts,
       nextThoughtNeeded: data.nextThoughtNeeded,
-      isRevision: data.isRevision,
-      revisesThought: data.revisesThought,
-      branchFromThought: data.branchFromThought,
-      branchId: data.branchId,
-      needsMoreThoughts: data.needsMoreThoughts,
+      isRevision: data.isRevision as boolean | undefined,
+      revisesThought: data.revisesThought as number | undefined,
+      branchFromThought: data.branchFromThought as number | undefined,
+      branchId: data.branchId as string | undefined,
+      needsMoreThoughts: data.needsMoreThoughts as boolean | undefined,
     };
   }
 
-  formatGameThought(thoughtData) {
+  private formatGameThought(thoughtData: GameThoughtData): string {
     const { thoughtNumber, totalThoughts, thought, isRevision, revisesThought, branchFromThought, branchId } = thoughtData;
 
     let prefix = '';
@@ -68,7 +78,7 @@ class GameThinkingServer {
 └${border}┘`;
   }
 
-  processGameThought(input) {
+  public processGameThought(input: unknown): { content: Array<{ type: string; text: string }>; isError?: boolean } {
     try {
       const validatedInput = this.validateGameThoughtData(input);
 
@@ -140,7 +150,7 @@ const gameThinkingSchema = z.object({
 server.tool(
   "gamethinking",
   gameThinkingSchema,
-  async (args) => {
+  async (args: z.infer<typeof gameThinkingSchema>) => {
     return gameThinkingServer.processGameThought(args);
   },
   {
@@ -201,4 +211,4 @@ async function runServer() {
 runServer().catch((error) => {
   console.error("Fatal error running server:", error);
   process.exit(1);
-}); 
+});
