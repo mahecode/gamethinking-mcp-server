@@ -1,0 +1,16 @@
+version: 1
+build:
+  type: dockerfile
+  dockerfile: Dockerfile
+deploy:
+  type: service
+  port: 3000
+  health_check:
+    type: tcp
+    port: 3000
+  resources:
+    cpu: 0.5
+    memory: 512Mi
+  env:
+    - name: NODE_ENV
+      value: production 
