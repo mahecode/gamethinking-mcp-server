@@ -8,32 +8,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Create a valid tsconfig.json file
-RUN cat > tsconfig.json << 'EOL'
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "outDir": "dist",
-    "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["*.ts"],
-  "exclude": ["node_modules", "dist"]
-}
-EOL
-
-# Copy source code
+# Copy application code
 COPY . .
 
-# Build the project
+# Build the application
 RUN npm run build
 
-# Set executable permissions
-RUN chmod +x dist/index.js
-
-# Command to run the server
-CMD ["node", "dist/index.js"] 
+# Command will be provided by smithery.yaml
+CMD ["node", "dist/index.js"]
